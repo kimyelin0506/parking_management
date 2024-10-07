@@ -1,0 +1,472 @@
+for(var j in userDoc[i]['userIDs']){
+                              userIDs[userDoc[i].toString()] = j;
+                            }
+
+Container(
+ decoration: BoxDecoration(
+                color: Colors.blueGrey,
+                borderRadius: BorderRadius.all(Radius.circular(15)),
+              ),
+                  height: MediaQuery.of(context).size.height - 600,
+                  width: MediaQuery.of(context).size.width - 100,
+
+ void visitCheck() async {
+    print('visitCheck');
+    await FirebaseDatabase.instance.ref('visit').get()
+        .then((DataSnapshot snapshot){
+          print('...........');
+          print(snapshot.);
+        });
+    print('..........');
+    print(visitParkingList);
+  }
+
+
+////
+ print('visitCheck');
+    await FirebaseDatabase.instance.ref()
+        .child('visit').get().then((DataSnapshot snapshot) {
+          Object? dt = snapshot.value;
+        });
+
+    print('..........');
+    print('List : $visitParkingList');
+
+
+///
+   DataSnapshot _snaphot = await FirebaseDatabase.instance.ref().child('').get();
+    visitParkingList = _snaphot.value as Map<dynamic, dynamic>;
+    print('-------');
+    print(visitParkingList);
+
+//
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+class Account extends StatefulWidget {
+  final String userId;
+  final String uId;
+
+  const Account({
+    required this.userId,
+    required this.uId,
+    super.key});
+
+  @override
+  State<Account> createState() => _AccountState(
+    userId: userId,
+    uId: uId,
+  );
+}
+
+class _AccountState extends State<Account> {
+  final String uId;
+  final String userId;
+  final _formKey = GlobalKey<FormState>();
+  final _authentication = FirebaseAuth.instance;
+  CollectionReference _reference = FirebaseFirestore.instance.collection('user');
+
+  String? userName;
+  String? userEmail;
+  String? pass;
+  bool? disabled;
+  bool? electric;
+  List<String> userIDs=[];
+  String? carNum;
+  String? profileUrl;
+
+  String? changeUserName;
+  String? changeUserEmail;
+  String? changePass;
+  bool? changeDisabled;
+  bool? changeElectric;
+  List<String> changeUserIDs=[];
+  String? changeCarNum;
+  String? changeProfileUrl;
+
+  _AccountState({
+    required this.uId,
+    required this.userId,
+});
+
+  void _tryValidation(){
+    final form = _formKey.currentState;
+    if (form != null) {
+      final isValid = form.validate();
+      if (isValid) {
+        form.save();
+      }
+    }
+  }
+
+  void getUserData() async {
+    await FirebaseFirestore.instance.collection('user')
+        .where('Uid', isEqualTo: uId)
+        .get().then((value) {
+      setState(() {
+        for(var snap in value.docs){
+          userName = snap['userName'];
+          userEmail = snap['userEmail'];
+          pass = snap['userPass'];
+          carNum = snap['carNum'];
+          disabled = snap['disabled'];
+          electric = snap['electric'];
+          profileUrl = snap['profileUrl'];
+          for(var i in snap['userIDs']){
+            userIDs.add(i);
+          }
+        }
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getUserData();
+    print(userName);
+    print('---initState---');
+  }
+
+  AppBar AppBarStyle(){
+    return AppBar(
+      title: Text('사용자 정보 수정'),
+      centerTitle: true,
+      backgroundColor: Colors.white10,
+    );
+  }
+
+  deleteUserIDs(selectId) {
+    showDialog(context: context,
+        builder: (context){
+      return Center(
+        child: AlertDialog(
+          title: Center(child: Text('멀티 계정 삭제', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),)),
+          content: Container(
+            height: MediaQuery.sizeOf(context).height-700,
+            width: MediaQuery.sizeOf(context).width-100,
+            child: Center(child: Text('${selectId} 계정을 삭제하시겠습니까?', style: TextStyle(fontSize: 25),)),
+          ),
+          actions: <Widget>[
+            TextButton(
+                onPressed: (){
+              Navigator.of(context).pop();
+            },
+                child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                    child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                  child: Text('취소', style: TextStyle(color: Colors.white, fontSize: 20),),
+                ))),
+            TextButton(
+                onPressed: (){
+
+                },
+                child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                      child: Text('확인', style: TextStyle(color: Colors.white, fontSize: 20),),
+                    ))),
+          ],
+        ),
+      );
+        });
+  }
+
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+        appBar: AppBarStyle(),
+        body: Container(
+          height: MediaQuery.sizeOf(context).height,
+          width: MediaQuery.sizeOf(context).width,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(15, 8, 15, 8),
+            child: SingleChildScrollView(
+              child: Container(
+                color: Colors.white60,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 20,),
+                    Text('*수정 할 정보만 입력해주세요.*', style: TextStyle(color: Colors.green, fontSize: 15),),
+                    SizedBox(height: 10,),
+                    SingleChildScrollView(
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // 이름 수정
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: TextFormField(
+                                key: ValueKey(1),
+                                keyboardType: TextInputType.name,
+                                validator: (value){
+                                  if(value!.isEmpty){
+                                    return userName;
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value){
+                                  changeUserName = value;
+                                },
+                                onSaved: (value){
+                                  changeUserName = value;
+                                },
+                                decoration: InputDecoration(
+                                  labelStyle: TextStyle(color: Colors.lightBlueAccent),
+                                  labelText: '대표 가입자 이름 수정', icon: Icon(Icons.person, color: Colors.lightBlueAccent,),
+                                  hintStyle: TextStyle(color: Colors.black45),
+                                  hintText: '$userName',
+                                ),
+                              ),
+                            ),
+                            // 아이디 수정
+                            Text('멀티 프로필 수정', style: TextStyle(
+                                fontSize: 15, color: Colors.lightBlueAccent),),
+                            Container(
+                              height: 300,
+                              width: 400,
+                              decoration: BoxDecoration(
+                                color: Colors.black45,
+                                borderRadius: BorderRadius.all(Radius.circular(10)),
+                              ),
+                              child: ListView.builder(
+                                  itemCount: userIDs.length,
+                                  itemBuilder: (context, index){
+                                    return Padding(
+                                      padding: const EdgeInsets.fromLTRB(15, 8, 8, 8),
+                                      child: TextFormField(
+                                        key: ValueKey(index+1),
+                                        keyboardType: TextInputType.name,
+                                        validator: (value){
+                                          if(value!.isEmpty){
+                                            return userIDs[index];
+                                          }
+                                          return null;
+                                        },
+                                        onChanged: (value){
+                                          userIDs[index] = value;
+                                        },
+                                        onSaved: (value){
+                                          userIDs[index] = value!;
+                                        },
+                                        decoration: InputDecoration(
+                                          labelStyle: TextStyle(color: Colors.lightBlueAccent),
+                                          labelText: '${userIDs[index]}',
+                                          icon: IconButton(
+                                            onPressed: (){
+                                           //   deleteUserIDs(userIDs[index]);
+                                            setState(() {
+                                              userIDs.remove(userIDs[index]);
+                                            });
+                                            },
+                                            icon: Icon(Icons.delete_outline),
+                                            color: Colors.lightBlueAccent,
+                                          ),
+                                          hintStyle: TextStyle(color: Colors.black45),
+                                          hintText: '${userIDs[index]}',
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                            ),
+                            // 이메일 수정
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: TextFormField(
+                                key: ValueKey(userIDs.length+2),
+                                keyboardType: TextInputType.emailAddress,
+                                validator: (value){
+                                  if(value!.isEmpty){
+                                    return userEmail;
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value){
+                                  changeUserEmail = value;
+                                },
+                                onSaved: (value){
+                                  changeUserEmail = value;
+                                },
+                                decoration: InputDecoration(
+                                  labelStyle: TextStyle(color: Colors.lightBlueAccent),
+                                  labelText: '대표 이메일 수정', icon: Icon(
+                                  Icons.email_outlined, color: Colors.lightBlueAccent,),
+                                  hintStyle: TextStyle(color: Colors.black45),
+                                  hintText: '$userEmail',
+                                ),
+                              ),
+                            ),
+                            // 비밀 번호 수정
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: TextFormField(
+                                key: ValueKey(userIDs.length+3),
+                                keyboardType: TextInputType.visiblePassword,
+                                validator: (value){
+                                  if(value!.isEmpty){
+                                    return pass;
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value){
+                                  changePass = value;
+                                },
+                                onSaved: (value){
+                                  changePass = value;
+                                },
+                                decoration: InputDecoration(
+                                  labelStyle: TextStyle(color: Colors.lightBlueAccent),
+                                  labelText: '비밀 번호 수정',
+                                  icon: Icon(Icons.lock_outline,
+                                    color: Colors.lightBlueAccent,),
+                                  hintStyle: TextStyle(color: Colors.black45),
+                                  hintText: '$pass',
+                                ),
+                              ),
+                            ),
+                            // 차량 번호
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: TextFormField(
+                                key: ValueKey(userIDs.length+4),
+                                keyboardType: TextInputType.name,
+                                validator: (value){
+                                  if(value!.isEmpty){
+                                    return carNum;
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value){
+                                  changeCarNum = value;
+                                },
+                                onSaved: (value){
+                                  changeCarNum = value;
+                                },
+                                decoration: InputDecoration(
+                                  labelStyle: TextStyle(color: Colors.lightBlueAccent),
+                                  labelText: '차량 번호 수정',
+                                  icon: Icon(Icons.car_crash_outlined,
+                                    color: Colors.lightBlueAccent,),
+                                  hintStyle: TextStyle(color: Colors.black45),
+                                  hintText: '$carNum',
+                                ),
+                              ),
+                            ),
+                            // profileUrl
+
+                            // 장애인 차량 인증 체크박스
+                            Padding(
+                                padding: EdgeInsets.only(left: 10.0),
+                                child: Row(
+                                  children: [
+                                    Checkbox(
+                                        value: disabled,
+                                        onChanged: (val) {
+                                          setState(() {
+                                            disabled = val!;
+                                          });
+                                        }),
+                                    Text(
+                                      '장애인 차량 등록하기',
+                                      style: TextStyle(fontSize: 15.0),
+                                    ),
+                                  ],
+                                )),
+                            // 전기차 체크박스
+                            Padding(
+                                padding: EdgeInsets.only(left: 10.0),
+                                child: Row(
+                                  children: [
+                                    Checkbox(
+                                        value: electric,
+                                        onChanged: (val) {
+                                          setState(() {
+                                            electric = val!;
+                                          });
+                                        }),
+                                    Text(
+                                      '장애인 차량 등록하기',
+                                      style: TextStyle(fontSize: 15.0),
+                                    ),
+                                  ],
+                                )),
+                            // 수정 확인 버튼
+                            SizedBox(
+                              width: 50,
+                              height: 40,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black45,
+                                  borderRadius: BorderRadius.circular(15.0),
+                                ),
+                                child: TextButton(
+                                    onPressed: () async {
+                                      _tryValidation();
+                                      try {
+                                        Map <String, dynamic> _new = {
+                                          'userName': userName,
+                                          'userEmail': userEmail,
+                                          'userIDs': FieldValue.arrayUnion(changeUserIDs),
+                                          'userPass': changePass,
+                                          'carNum': changeCarNum,
+                                          'disabled': changeDisabled,
+                                          'electric': changeElectric,
+                                          'profileUrl' : changeProfileUrl
+                                        };
+                                        await _reference.doc(uId).update(_new);
+                                        Navigator.of(context).pop();
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(
+                                          content:
+                                          Text('회원 정보를 수정하였습니다!'),
+                                          backgroundColor: Colors.blueAccent,
+                                        ));
+                                      } catch (e) {
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(SnackBar(
+                                            content:
+                                            Text('가입 양식을 다시 확인해 주세요.'),
+                                            backgroundColor: Colors.red,
+                                          ));
+                                        }
+                                      }
+                                    },
+                                    child: Text(
+                                      '확인',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold),
+                                    )),
+                              ),
+                            ),
+
+                          ],
+
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+}

@@ -1,0 +1,290 @@
+구현 해야하는 것
+ - 채팅(yes) => 유저와의 채팅
+ - 아이디 선택 => 예약 시 남길 메세지 => 예약 완료(15분 안으로 주차 완료해주세요(임시:완료버튼))
+   => 자리 예약상태 => 완료:주차 못함으로 띄움
+ - navBar : 사용자 정보 수정, 추가, 로그아웃
+ - 우측 상단 그동안의 채팅창 구현 => 채팅리스트에서 사용자 검색도 가능
+
+
+
+  void selectUser(selected) async {
+    List userIds =[];
+    List choice =[];
+    await _referenceUser.where('userEmail', isEqualTo: _userEmail).get().then((value) {
+      for(var snap in value.docs){
+        print('----userIds');
+        for(var i in snap['userIDs']){
+          print(i);
+          setState(() {
+            userIds.add(i);
+            choice.add(false);
+          });
+        }
+      }
+    });
+    
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+            return SingleChildScrollView(
+              child: AlertDialog(
+                title: Center(
+                  child: Text(
+                    '현재 차량 이용 유저 선택',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+                  ),
+                ),
+                content: SizedBox(
+                  width: MediaQuery.sizeOf(context).width - 100,
+                  height: MediaQuery.sizeOf(context).height - 300,
+                  child: SingleChildScrollView(
+                    child: Container(
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            height: 20,
+                          ),
+                          Container(
+                            width: MediaQuery.sizeOf(context).width - 200,
+                            height: MediaQuery.sizeOf(context).height - 300,
+                            child: ListView.builder(
+                                itemCount: userIds.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  return Container(
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          width: 200,
+                                          height: 80,
+                                          decoration: BoxDecoration(
+                                            color: choice[index] == true ? Colors.lightBlue : Colors.grey,
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(15.0)),
+                                          ),
+                                          child: TextButton(
+                                              onPressed: () {
+                                                for(var i=0; i<choice.length; i++){
+                                                  if(choice[i] == true){
+                                                    choice[i] = false;
+                                                  }
+                                                }
+                                               setState((){
+                                                 choice[index] = true;
+                                                 selectId = userIds[index];
+                                               });
+                                                print(selectId);
+                                              },
+                                              child: Text(
+                                                '${userIds[index]}',
+                                                style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 20.0),
+                                              )),
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        )
+                                      ],
+                                    ),
+                                  );
+                                }),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                actions: <Widget>[
+                  TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('뒤로 가기')),
+                  TextButton(
+                      onPressed: () {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) {
+                          return AppointmentParkingScreen(
+                            selectParking: selectParking,
+                            selectId: selectId!,seat: selected
+                          );
+                        }));
+                      }, child: Text('확인')),
+                ],
+              ),
+            );
+          });
+        });
+  }
+
+////////////
+HomeScreen(
+                                      selectId: '',
+                                      //selectSeat: false,
+                                    );
+///////////
+StreamBuilder(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot){
+            if(snapshot.hasData){
+              return HomeScreen(
+                selectId: '',
+               // selectSeat: false,
+              );
+
+            }
+            return LoginScreen();
+          },
+        )
+
+////
+ return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text('현재 차량 이용 유저 선택'),
+          SizedBox(height: 20,),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('user').snapshots(),
+            builder: (BuildContext context, AsyncSnapshot snapshot){
+              //error
+              if(snapshot.hasError){
+                return Center(child: Text('오류 발생 ${snapshot.error}'),);
+              }
+
+              //get data
+              QuerySnapshot querySnapshot = snapshot!.data;
+              List<QueryDocumentSnapshot> documents = querySnapshot.docs;
+
+              //docs -> map
+              List<Map> items = documents.map((e) => e.data() as Map).toList();
+
+              return ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (BuildContext context, int index){
+                    Map thisItem = items[index];
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: (){
+                            
+                          },
+                          child: Container(
+                            height: 80,
+                            width: 200,
+                            child: Text('${thisItem[]}', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),),
+                          ),
+                        ),
+                        SizedBox(height: 15,),
+                        Divider(),
+                      ],
+                    );
+                  });
+            },
+          ),
+        ],
+      ),
+    );
+///
+  void selectUser() async {
+
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return SingleChildScrollView(
+                  child: AlertDialog(
+                    title: Center(
+                      child: Text(
+                        '현재 차량 이용 유저 선택',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+                      ),
+                    ),
+                    content: SizedBox(
+                      width: MediaQuery.sizeOf(context).width - 100,
+                      height: MediaQuery.sizeOf(context).height - 300,
+                      child: SingleChildScrollView(
+                        child: Container(
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: 20,
+                              ),
+                              Container(
+                                width: MediaQuery.sizeOf(context).width - 200,
+                                height: MediaQuery.sizeOf(context).height - 300,
+                                child: ListView.builder(
+                                    itemCount: userIds.length,
+                                    itemBuilder: (BuildContext context, int index) {
+                                      return Container(
+                                        child: Column(
+                                          children: [
+                                            Container(
+                                              width: 200,
+                                              height: 80,
+                                              decoration: BoxDecoration(
+                                                color: choice[index] == true ? Colors.lightBlue : Colors.grey,
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(15.0)),
+                                              ),
+                                              child: TextButton(
+                                                  onPressed: () {
+                                                    for(var i=0; i<choice.length; i++){
+                                                      if(choice[i] == true){
+                                                        choice[i] = false;
+                                                      }
+                                                    }
+                                                    setState((){
+                                                      choice[index] = true;
+                                                      selectId = userIds[index];
+                                                    });
+                                                    print(selectId);
+                                                  },
+                                                  child: Text(
+                                                    '${userIds[index]}',
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 20.0),
+                                                  )),
+                                            ),
+                                            SizedBox(
+                                              height: 10,
+                                            )
+                                          ],
+                                        ),
+                                      );
+                                    }),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('뒤로 가기')),
+                      TextButton(
+                          onPressed: () {
+                            Navigator.push(context,
+                                MaterialPageRoute(builder: (context) {
+                                  return HomeScreen(selectId: selectId!);
+                                }));
+                          }, child: Text('확인')),
+                    ],
+                  ),
+                );
+              });
+        });
+  }
